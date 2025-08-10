@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mão Sapeca</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- UI Elements -->
+        <div id="ui">
+            <div id="score">Pontos: 0</div>
+        </div>
+        
+        <!-- Mobile Controls -->
+        <div id="controls">
+            <!-- Virtual Joystick -->
+            <div id="joystick">
+                <div id="joystickBase"></div>
+                <div id="joystickKnob"></div>
+            </div>
+            
+            <!-- Jump Button -->
+            <div id="jumpButton">PULAR</div>
+        </div>
+    </div>
+
+    <!-- Three.js with Import Maps -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"
+      }
+    }
+    </script>
+    <script src="game.js" type="module"></script>
+</body>
+</html>
