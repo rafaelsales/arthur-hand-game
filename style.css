@@ -85,6 +85,7 @@ body {
     transform: translate(-50%, -50%);
     transition: none;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    pointer-events: none; /* Let touch events go through to parent */
 }
 
 /* Jump Button */

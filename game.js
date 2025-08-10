@@ -202,14 +202,24 @@ function setupControls() {
     const jumpButton = document.getElementById('jumpButton');
     
     let isDragging = false;
-    let joystickRect = joystick.getBoundingClientRect();
+    let joystickRect;
     
-    // Update joystick rect on window resize
-    window.addEventListener('resize', () => {
+    // Function to update joystick rect
+    function updateJoystickRect() {
         joystickRect = joystick.getBoundingClientRect();
-    });
+    }
+    
+    // Initial rect calculation
+    updateJoystickRect();
+    
+    // Update joystick rect on window resize and scroll
+    window.addEventListener('resize', updateJoystickRect);
+    window.addEventListener('scroll', updateJoystickRect);
     
     function updateJoystick(clientX, clientY) {
+        // Recalculate rect to ensure accuracy
+        updateJoystickRect();
+        
         const centerX = joystickRect.left + joystickRect.width / 2;
         const centerY = joystickRect.top + joystickRect.height / 2;
         
@@ -224,7 +234,8 @@ function setupControls() {
             deltaY = (deltaY / distance) * maxDistance;
         }
         
-        joystickKnob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+        // Apply transform with the centered positioning maintained
+        joystickKnob.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
         
         // Update joystick data (normalize to -1 to 1)
         joystickData.x = deltaX / maxDistance;
@@ -232,7 +243,7 @@ function setupControls() {
     }
     
     function resetJoystick() {
-        joystickKnob.style.transform = 'translate(0px, 0px)';
+        joystickKnob.style.transform = 'translate(-50%, -50%)';
         joystickData.x = 0;
         joystickData.y = 0;
     }
@@ -406,26 +417,29 @@ function updatePhysics(deltaTime) {
         const joystickMagnitude = Math.sqrt(joystickData.x * joystickData.x + joystickData.y * joystickData.y);
         
         if (joystickMagnitude > 0.1) {
-            // Calculate movement direction and rotate hand accordingly
-            const movementAngle = Math.atan2(joystickData.x, joystickData.y);
+            // Calculate the angle based on movement direction
+            const movementAngle = Math.atan2(joystickData.x, -joystickData.y); // Note: -joystickData.y because joystick Y is inverted
             
-            // Base rotation (180 degrees) + movement direction
-            // When joystickData.y > 0 (moving forward/away from camera): face forward (no additional rotation)
-            // When joystickData.y < 0 (moving backward/toward camera): face camera (additional 180 degrees)
-            let targetRotation = Math.PI; // Base 180 degree rotation
+            // Convert movement angle to rotation (invert to match movement direction)
+            // movementAngle = 0 means moving forward (away from camera) -> rotation = 0 (0°)
+            // movementAngle = π means moving backward (toward camera) -> rotation = π (180°)
+            let targetRotation = movementAngle;
             
-            if (joystickData.y < 0) {
-                // Moving toward camera - face the camera
-                targetRotation = 0;
-            }
-            
-            // Add horizontal rotation for left/right movement
-            targetRotation += movementAngle - Math.PI/2;
+            // Normalize rotation to 0-2π range
+            targetRotation = ((targetRotation % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
             
             // Smooth rotation interpolation
-            const rotationDiff = targetRotation - handModel.rotation.y;
-            const normalizedDiff = Math.atan2(Math.sin(rotationDiff), Math.cos(rotationDiff));
-            handModel.rotation.y += normalizedDiff * 0.1; // Smooth rotation speed
+            const currentRotation = handModel.rotation.y;
+            let rotationDiff = targetRotation - currentRotation;
+            
+            // Find shortest rotation path
+            if (rotationDiff > Math.PI) {
+                rotationDiff -= 2 * Math.PI;
+            } else if (rotationDiff < -Math.PI) {
+                rotationDiff += 2 * Math.PI;
+            }
+            
+            handModel.rotation.y += rotationDiff * 0.15; // Smooth rotation speed
             
             // Check if joystick is pressed more than halfway for running
             if (joystickMagnitude > 0.5) {
