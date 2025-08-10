@@ -22,8 +22,8 @@ Mão Sapeca é um jogo onde um personagem que é uma mão cujo objetivo é pegar
 
 - O jogador pode se mover tridimensionalmente no cenário
 - Colisões realisticas
-- Gravidade de Marte: 3,73 m/s²
-- Vento variável em direção e velocidade (entre 0 e 200m/s)
+- Gravidade da Terra: 9,81 m/s²
+- Vento variável em direção e velocidade (entre 0 e 200m/s).
 - O jogador pode pular com o botão de pulo
 
 # Características técnicas
@@ -37,4 +37,8 @@ Mão Sapeca é um jogo onde um personagem que é uma mão cujo objetivo é pegar
 # Assets
 
 - Na pasta `assets` há um arquivo `hand.glb` que é o modelo 3D da mão - tem 0.18m de altura e 0.18m de largura e 0.07m de profundidade.
+  - O arquivo .glb tem 3 animações:
+    - `Walking` - caminhada normal quando o joystick está pressionado até a metade da extremidade do joystick.
+    - `Running` - caminhada rápida quando o joystick está pressionado a partir da metade da extremidade do joystick.
+    - `All_Night_Dance`: pulo.
 - Crie uma caixa 3D diretamente no Three.js já que ainda não tenho o modelo 3D da caixa. Tem 0.04m em cada dimensão.

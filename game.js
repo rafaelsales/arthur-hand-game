@@ -5,12 +5,15 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // Game variables
 let scene, camera, renderer, world;
 let hand, handModel;
+let mixer, animations = {};
+let currentAnimation = null;
 let boxes = [];
 let score = 0;
 let gameStarted = false;
+let lastTime = 0;
 
 // Physics variables
-const MARS_GRAVITY = -3.73;
+const EARTH_GRAVITY = -9.81;
 let handVelocity = { x: 0, y: 0, z: 0 };
 let isGrounded = false;
 let windForce = { x: 0, z: 0 };
@@ -19,9 +22,9 @@ let windForce = { x: 0, z: 0 };
 let joystickData = { x: 0, y: 0 };
 let isJumpPressed = false;
 
-// Game constants
+// Game constants  
 const HAND_SPEED = 5;
-const JUMP_FORCE = 8;
+const JUMP_FORCE = 12;
 const GROUND_Y = 0;
 const HAND_HEIGHT = 0.18;
 
@@ -125,6 +128,7 @@ function loadHandModel() {
         handModel = gltf.scene;
         handModel.scale.set(1, 1, 1);
         handModel.position.set(0, GROUND_Y + HAND_HEIGHT / 2, 0);
+        handModel.rotation.y = Math.PI; // Rotate 180 degrees
         handModel.castShadow = true;
         handModel.receiveShadow = true;
         
@@ -135,6 +139,18 @@ function loadHandModel() {
                 child.receiveShadow = true;
             }
         });
+        
+        // Setup animations
+        if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(handModel);
+            
+            // Store animations by name
+            gltf.animations.forEach((clip) => {
+                animations[clip.name] = mixer.clipAction(clip);
+            });
+            
+            console.log('Available animations:', Object.keys(animations));
+        }
         
         scene.add(handModel);
         hand = handModel;
@@ -339,13 +355,36 @@ function setupWind() {
     }, Math.random() * 4000 + 3000);
 }
 
+function playAnimation(animationName) {
+    if (!mixer || !animations[animationName] || currentAnimation === animationName) {
+        return;
+    }
+    
+    // Stop current animation
+    if (currentAnimation && animations[currentAnimation]) {
+        animations[currentAnimation].fadeOut(0.2);
+    }
+    
+    // Play new animation
+    const action = animations[animationName];
+    action.reset().fadeIn(0.2).play();
+    currentAnimation = animationName;
+}
+
+function stopAnimation() {
+    if (currentAnimation && animations[currentAnimation]) {
+        animations[currentAnimation].fadeOut(0.2);
+        currentAnimation = null;
+    }
+}
+
 function updatePhysics(deltaTime) {
     if (!hand || !gameStarted) return;
     
     const handPosition = hand.position;
     
     // Apply gravity
-    handVelocity.y += MARS_GRAVITY * deltaTime;
+    handVelocity.y += EARTH_GRAVITY * deltaTime;
     
     // Apply movement from joystick
     handVelocity.x = joystickData.x * HAND_SPEED;
@@ -359,6 +398,24 @@ function updatePhysics(deltaTime) {
     if (isJumpPressed && isGrounded) {
         handVelocity.y = JUMP_FORCE;
         isGrounded = false;
+        playAnimation('All_Night_Dance'); // Jump animation
+    }
+    
+    // Handle movement animations
+    if (isGrounded) {
+        const joystickMagnitude = Math.sqrt(joystickData.x * joystickData.x + joystickData.y * joystickData.y);
+        
+        if (joystickMagnitude > 0.1) {
+            // Check if joystick is pressed more than halfway for running
+            if (joystickMagnitude > 0.5) {
+                playAnimation('Running');
+            } else {
+                playAnimation('Walking');
+            }
+        } else {
+            // No movement - stop animation
+            stopAnimation();
+        }
     }
     
     // Update position
@@ -429,14 +486,24 @@ function updateCamera() {
     camera.lookAt(hand.position);
 }
 
-function animate() {
+function animate(currentTime) {
     requestAnimationFrame(animate);
     
-    const deltaTime = 0.016; // Assume 60fps for consistent physics
+    // Calculate actual deltaTime
+    const deltaTime = lastTime ? (currentTime - lastTime) / 1000 : 0.016;
+    lastTime = currentTime;
     
-    updatePhysics(deltaTime);
+    // Clamp deltaTime to prevent large jumps
+    const clampedDeltaTime = Math.min(deltaTime, 0.033); // Max 30fps
+    
+    updatePhysics(clampedDeltaTime);
     checkCollisions();
     updateCamera();
+    
+    // Update animation mixer
+    if (mixer) {
+        mixer.update(clampedDeltaTime);
+    }
     
     renderer.render(scene, camera);
 }
