@@ -12,6 +12,8 @@ body {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    /* Support for iOS safe areas */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 #gameContainer {
@@ -45,19 +47,20 @@ body {
 
 #controls {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 200px;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: env(safe-area-inset-left, 0);
+    right: env(safe-area-inset-right, 0);
+    height: calc(200px + env(safe-area-inset-bottom, 0));
     z-index: 100;
     pointer-events: none;
+    padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 /* Virtual Joystick */
 #joystick {
     position: absolute;
-    bottom: 30px;
-    left: 30px;
+    bottom: calc(30px + env(safe-area-inset-bottom, 0));
+    left: calc(30px + env(safe-area-inset-left, 0));
     width: 120px;
     height: 120px;
     pointer-events: all;
@@ -91,8 +94,8 @@ body {
 /* Jump Button */
 #jumpButton {
     position: absolute;
-    bottom: 30px;
-    right: 30px;
+    bottom: calc(30px + env(safe-area-inset-bottom, 0));
+    right: calc(30px + env(safe-area-inset-right, 0));
     width: 120px;
     height: 120px;
     background: rgba(255, 255, 255, 0.2);
@@ -129,13 +132,13 @@ body {
     }
     
     #joystick {
-        bottom: 20px;
-        left: 20px;
+        bottom: calc(20px + env(safe-area-inset-bottom, 0));
+        left: calc(20px + env(safe-area-inset-left, 0));
     }
     
     #jumpButton {
-        bottom: 20px;
-        right: 20px;
+        bottom: calc(20px + env(safe-area-inset-bottom, 0));
+        right: calc(20px + env(safe-area-inset-right, 0));
         font-size: 14px;
     }
     
@@ -147,10 +150,51 @@ body {
 
 @media (max-height: 600px) {
     #controls {
-        height: 150px;
+        height: calc(150px + env(safe-area-inset-bottom, 0));
     }
     
     #joystick, #jumpButton {
-        bottom: 15px;
+        bottom: calc(15px + env(safe-area-inset-bottom, 0));
+    }
+    
+    #joystick {
+        left: calc(15px + env(safe-area-inset-left, 0));
+    }
+    
+    #jumpButton {
+        right: calc(15px + env(safe-area-inset-right, 0));
+    }
+}
+
+/* Additional iOS specific adjustments */
+@supports (-webkit-touch-callout: none) {
+    /* iOS Safari specific styles */
+    #controls {
+        /* Extra padding for iOS bottom bar */
+        padding-bottom: calc(env(safe-area-inset-bottom, 0) + 10px);
+    }
+    
+    /* Landscape mode adjustments for iOS */
+    @media (orientation: landscape) and (max-height: 500px) {
+        #joystick, #jumpButton {
+            width: 90px;
+            height: 90px;
+        }
+        
+        #joystick {
+            bottom: calc(10px + env(safe-area-inset-bottom, 0));
+            left: calc(10px + env(safe-area-inset-left, 0));
+        }
+        
+        #jumpButton {
+            bottom: calc(10px + env(safe-area-inset-bottom, 0));
+            right: calc(10px + env(safe-area-inset-right, 0));
+            font-size: 12px;
+        }
+        
+        #joystickKnob {
+            width: 35px;
+            height: 35px;
+        }
     }
 }
