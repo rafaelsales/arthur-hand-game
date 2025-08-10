@@ -401,11 +401,32 @@ function updatePhysics(deltaTime) {
         playAnimation('All_Night_Dance'); // Jump animation
     }
     
-    // Handle movement animations
+    // Handle movement animations and rotation
     if (isGrounded) {
         const joystickMagnitude = Math.sqrt(joystickData.x * joystickData.x + joystickData.y * joystickData.y);
         
         if (joystickMagnitude > 0.1) {
+            // Calculate movement direction and rotate hand accordingly
+            const movementAngle = Math.atan2(joystickData.x, joystickData.y);
+            
+            // Base rotation (180 degrees) + movement direction
+            // When joystickData.y > 0 (moving forward/away from camera): face forward (no additional rotation)
+            // When joystickData.y < 0 (moving backward/toward camera): face camera (additional 180 degrees)
+            let targetRotation = Math.PI; // Base 180 degree rotation
+            
+            if (joystickData.y < 0) {
+                // Moving toward camera - face the camera
+                targetRotation = 0;
+            }
+            
+            // Add horizontal rotation for left/right movement
+            targetRotation += movementAngle - Math.PI/2;
+            
+            // Smooth rotation interpolation
+            const rotationDiff = targetRotation - handModel.rotation.y;
+            const normalizedDiff = Math.atan2(Math.sin(rotationDiff), Math.cos(rotationDiff));
+            handModel.rotation.y += normalizedDiff * 0.1; // Smooth rotation speed
+            
             // Check if joystick is pressed more than halfway for running
             if (joystickMagnitude > 0.5) {
                 playAnimation('Running');
